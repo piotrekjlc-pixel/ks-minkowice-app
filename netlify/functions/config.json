@@ -1,0 +1,161 @@
+{
+  "players": [
+    "Hubert Bodak",
+    "Rafał Cielek",
+    "Jakub Dolata",
+    "Marek Dolata",
+    "Bartłomiej Dudo",
+    "Oleksandr Kashytskyi",
+    "Adam Kirchner",
+    "Robert Kozłowski",
+    "Dawid Kołtowski",
+    "Oskar Księżopolski",
+    "Dominik Kulak",
+    "Robert Kulak",
+    "Denys Kuleshevych",
+    "Marek Kupiec",
+    "Piotr Langiewicz",
+    "Maciej Lejczak",
+    "Dawid Lipiński",
+    "Rafał Malitowski",
+    "Dawid Markowski",
+    "Jakub Mruk",
+    "Wiktor Oleszczuk",
+    "Patryk Przytuła",
+    "Artur Rytwiński",
+    "Ihor Shylo",
+    "Mariusz Stenzel",
+    "Grzegorz Strzelec",
+    "Krzysztof Szymalak",
+    "Tomasz Tarasewicz",
+    "Przemysław Tracz",
+    "Radosław Zając",
+    "Maciej Zakliński",
+    "Stanisław Zakliński",
+    "Szymon Zakliński",
+    "Olaf Łucjan"
+  ],
+  "pins": {
+    "Hubert Bodak": "2265",
+    "Rafał Cielek": "8417",
+    "Jakub Dolata": "5558",
+    "Marek Dolata": "8370",
+    "Bartłomiej Dudo": "5866",
+    "Oleksandr Kashytskyi": "5330",
+    "Adam Kirchner": "4037",
+    "Robert Kozłowski": "5439",
+    "Dawid Kołtowski": "7823",
+    "Oskar Księżopolski": "6417",
+    "Dominik Kulak": "3900",
+    "Robert Kulak": "2729",
+    "Denys Kuleshevych": "9007",
+    "Marek Kupiec": "6753",
+    "Piotr Langiewicz": "7937",
+    "Maciej Lejczak": "2870",
+    "Dawid Lipiński": "8755",
+    "Rafał Malitowski": "6336",
+    "Dawid Markowski": "3372",
+    "Jakub Mruk": "8579",
+    "Wiktor Oleszczuk": "9792",
+    "Patryk Przytuła": "3380",
+    "Artur Rytwiński": "7326",
+    "Ihor Shylo": "2678",
+    "Mariusz Stenzel": "2114",
+    "Grzegorz Strzelec": "1898",
+    "Krzysztof Szymalak": "5288",
+    "Tomasz Tarasewicz": "1429",
+    "Przemysław Tracz": "6298",
+    "Radosław Zając": "1995",
+    "Maciej Zakliński": "2308",
+    "Stanisław Zakliński": "4069",
+    "Szymon Zakliński": "4412",
+    "Olaf Łucjan": "5967"
+  },
+  "adminPin": "1987",
+  "matches": [
+    [
+      "23.08.2026",
+      "11:00",
+      "Borowianka Borowa",
+      "KS Invest-House Minkowice Oławskie",
+      "WYJAZD"
+    ],
+    [
+      "30.08.2026",
+      "11:00",
+      "KS Invest-House Minkowice Oławskie",
+      "KS Dobroszów",
+      "DOM"
+    ],
+    [
+      "06.09.2026",
+      "11:00",
+      "GKS II Mirków/Długołęka",
+      "KS Invest-House Minkowice Oławskie",
+      "WYJAZD"
+    ],
+    [
+      "13.09.2026",
+      "11:00",
+      "KS Invest-House Minkowice Oławskie",
+      "WKS Ligota Wielka",
+      "DOM"
+    ],
+    [
+      "20.09.2026",
+      "11:00",
+      "Zalesie Wójcice",
+      "KS Invest-House Minkowice Oławskie",
+      "WYJAZD"
+    ],
+    [
+      "27.09.2026",
+      "11:00",
+      "KS Invest-House Minkowice Oławskie",
+      "Widawa Bierutów",
+      "DOM"
+    ],
+    [
+      "04.10.2026",
+      "11:00",
+      "Burza Dębina",
+      "KS Invest-House Minkowice Oławskie",
+      "WYJAZD"
+    ],
+    [
+      "11.10.2026",
+      "11:00",
+      "KS Invest-House Minkowice Oławskie",
+      "KS Dziadowa Kłoda",
+      "DOM"
+    ],
+    [
+      "18.10.2026",
+      "11:00",
+      "Piast Miłocice",
+      "KS Invest-House Minkowice Oławskie",
+      "WYJAZD"
+    ],
+    [
+      "25.10.2026",
+      "11:00",
+      "KS Invest-House Minkowice Oławskie",
+      "Błękitni Krzeczyn",
+      "DOM"
+    ],
+    [
+      "08.11.2026",
+      "11:00",
+      "GKS Kątna",
+      "KS Invest-House Minkowice Oławskie",
+      "WYJAZD"
+    ],
+    [
+      "15.11.2026",
+      "11:00",
+      "KS Invest-House Minkowice Oławskie",
+      "Wilk Długołęka",
+      "DOM"
+    ]
+  ]
+}

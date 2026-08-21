@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1b2130">
+<title>KS Invest House Minkowice Oławskie</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#171717}
+header{background:#1d2431;color:#fff;border-bottom:4px solid #f3c529;padding:16px}
+.head{max-width:950px;margin:auto;display:flex;align-items:center;gap:16px}.logo{width:90px;height:90px;border-radius:50%;object-fit:cover;border:4px solid #f3c529}
+h1{margin:0;font-size:25px}.sub{opacity:.8;margin-top:5px;font-size:14px}
+main{max-width:950px;margin:auto;padding:14px}.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 3px 12px #0001}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.tabs button,.btn{border:0;border-radius:12px;padding:12px;font-weight:800;cursor:pointer}.tabs button{background:#fff}.tabs .active{background:#f3c529}
+.hidden{display:none}.login{max-width:520px;margin:20px auto}.field{margin:10px 0}select,input{width:100%;padding:12px;border:1px solid #d7d7d7;border-radius:10px;font-size:16px}
+.btn-primary{background:#f3c529}.btn-dark{background:#1d2431;color:#fff}.btn-yes{background:#20b75a;color:#fff}.btn-no{background:#e84646;color:#fff}.btn-logout{background:#eee}
+.event{border:1px solid #eee;border-left:5px solid #f3c529;border-radius:12px;padding:14px;margin:10px 0}.event h3{margin:0 0 5px}
+.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1}
+.status{font-weight:800;margin-top:8px}.yesText{color:#159447}.noText{color:#cf3232}.noneText{color:#737373}
+.row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee}.row:last-child{border:0}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{border-radius:12px;padding:12px;text-align:center;background:#f6f6f6}.num{font-size:28px;font-weight:900}
+.match{padding:12px 0;border-bottom:1px solid #eee}.small{font-size:13px;color:#6b7280}.error{color:#c62828;font-weight:700}.ok{color:#15803d;font-weight:700}
+@media(max-width:620px){.tabs{grid-template-columns:repeat(2,1fr)}h1{font-size:19px}.logo{width:72px;height:72px}.row{align-items:flex-start}}
+</style></head><body>
+<header><div class="head"><img src="logo-klubu.jpg" class="logo"><div><h1>KS INVEST HOUSE<br>MINKOWICE OŁAWSKIE</h1><div class="sub">Wspólna aplikacja drużyny • sezon 2026/27</div></div></div></header>
+<main>
+<div id="loginBox" class="card login">
+<h2>Logowanie zawodnika</h2><div class="small">Wybierz swoje nazwisko i wpisz swój 4-cyfrowy PIN.</div>
+<div class="field"><select id="playerSelect"></select></div>
+<div class="field"><input id="playerPin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN zawodnika"></div>
+<button class="btn btn-primary" style="width:100%" onclick="playerLogin()">Zaloguj</button>
+<div id="loginMsg"></div>
+<hr style="border:0;border-top:1px solid #eee;margin:18px 0">
+<button class="btn btn-dark" style="width:100%" onclick="showCoachLogin()">Panel trenera</button>
+<div id="coachLogin" class="hidden">
+<div class="field"><input id="coachPin" type="password" placeholder="PIN trenera"></div>
+<button class="btn btn-dark" style="width:100%" onclick="coachLogin()">Zaloguj jako trener</button>
+</div>
+</div>
+
+<div id="app" class="hidden">
+<div class="tabs">
+<button class="active" onclick="tab('home',this)">Najbliższe</button>
+<button onclick="tab('schedule',this)">Terminarz</button>
+<button id="coachTabBtn" class="hidden" onclick="tab('coach',this)">Panel trenera</button>
+<button onclick="logout()">Wyloguj</button>
+</div>
+<section id="home"><div class="card"><h2 id="welcome"></h2><div id="trainingList"></div></div></section>
+<section id="schedule" class="hidden"><div class="card"><h2>Terminarz meczów</h2><div id="matches"></div></div></section>
+<section id="coach" class="hidden"><div class="card"><h2>Panel trenera</h2><div class="field"><select id="coachEvent" onchange="loadCoach()"></select></div><div id="coachStats"></div><div id="coachRows"></div></div></section>
+</div>
+</main>
+<script>
+let data=null,session=JSON.parse(localStorage.getItem('ksSession')||'null');
+const $=id=>document.getElementById(id);
+async function api(url,opt={}){const r=await fetch(url,opt);const j=await r.json();if(!r.ok)throw new Error(j.error||'Błąd');return j}
+async function init(){
+ data=await api('/.netlify/functions/events');
+ $('playerSelect').innerHTML='<option value="">-- wybierz zawodnika --</option>'+data.players.map(p=>`<option>${p}</option>`).join('');
+ if(session) openApp();
+}
+function showCoachLogin(){$('coachLogin').classList.toggle('hidden')}
+function msg(t,ok=false){$('loginMsg').innerHTML=`<p class="${ok?'ok':'error'}">${t}</p>`}
+function playerLogin(){const player=$('playerSelect').value,pin=$('playerPin').value;if(!player||pin.length!==4)return msg('Wybierz nazwisko i wpisz 4-cyfrowy PIN.');session={role:'player',player,pin};localStorage.setItem('ksSession',JSON.stringify(session));openApp()}
+async function coachLogin(){const pin=$('coachPin').value;try{const eid=data.trainings[0]?.id||'';await api('/.netlify/functions/attendance?adminPin='+encodeURIComponent(pin)+'&eventId='+encodeURIComponent(eid));session={role:'coach',pin};localStorage.setItem('ksSession',JSON.stringify(session));openApp()}catch(e){msg(e.message)}}
+function openApp(){
+ $('loginBox').classList.add('hidden');$('app').classList.remove('hidden');
+ $('coachTabBtn').classList.toggle('hidden',session.role!=='coach');
+ $('welcome').textContent=session.role==='coach'?'Najbliższe treningi':'Cześć, '+session.player;
+ renderTrainings();renderMatches();
+ if(session.role==='coach'){ $('coachEvent').innerHTML=data.trainings.map(t=>`<option value="${t.id}">${t.label} ${fmt(t.date)} • ${t.time}</option>`).join('');}
+}
+function fmt(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`}
+function renderTrainings(){
+ $('trainingList').innerHTML=data.trainings.slice(0,4).map((t,i)=>`<div class="event"><h3>${i===0?'Najbliższy trening: ':''}${t.label} • ${fmt(t.date)}</h3><div>${t.time} • ${t.place}</div>${session.role==='player'?`<div class="actions"><button class="btn btn-yes" onclick="answer('${t.id}','yes')">BĘDĘ</button><button class="btn btn-no" onclick="answer('${t.id}','no')">NIE BĘDĘ</button></div><div id="st-${t.id}" class="status noneText">Nie zaznaczono</div>`:''}</div>`).join('');
+}
+async function answer(eventId,status){
+ try{await api('/.netlify/functions/attendance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({player:session.player,pin:session.pin,eventId,status})});const el=$('st-'+eventId);el.textContent=status==='yes'?'✓ Będę':'✕ Nie będę';el.className='status '+(status==='yes'?'yesText':'noText')}catch(e){alert(e.message);if(e.message.includes('PIN')) logout()}
+}
+function renderMatches(){$('matches').innerHTML=data.matches.map(m=>`<div class="match"><b>${m[0]} • ${m[1]}</b><div>${m[2]} — ${m[3]}</div><span class="small">${m[4]}</span></div>`).join('')}
+async function loadCoach(){
+ const id=$('coachEvent').value;if(!id)return;
+ try{const j=await api('/.netlify/functions/attendance?adminPin='+encodeURIComponent(session.pin)+'&eventId='+encodeURIComponent(id));const y=j.rows.filter(x=>x.status==='yes').length,n=j.rows.filter(x=>x.status==='no').length,u=j.rows.filter(x=>x.status==='none').length;
+ $('coachStats').innerHTML=`<div class="statgrid"><div class="stat"><div class="num">${y}</div>Będzie</div><div class="stat"><div class="num">${n}</div>Nie będzie</div><div class="stat"><div class="num">${u}</div>Brak odp.</div></div>`;
+ $('coachRows').innerHTML=j.rows.map(r=>`<div class="row"><b>${r.player}</b><span class="${r.status==='yes'?'yesText':r.status==='no'?'noText':'noneText'}">${r.status==='yes'?'BĘDZIE':r.status==='no'?'NIE BĘDZIE':'BRAK ODPOWIEDZI'}</span></div>`).join('');
+ }catch(e){alert(e.message)}
+}
+function tab(id,b){document.querySelectorAll('#app section').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(id==='coach')loadCoach()}
+function logout(){localStorage.removeItem('ksSession');location.reload()}
+init().catch(e=>{document.body.innerHTML='<main><div class="card error">Nie udało się uruchomić aplikacji: '+e.message+'</div></main>'});
+</script></body></html>
