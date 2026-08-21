@@ -11,7 +11,7 @@ function json(statusCode, body) {
     "Access-Control-Allow-Methods":"GET,POST,OPTIONS"
   }, body: JSON.stringify(body) };
 }
-function store(){ return getStore({name:"ks-minkowice-attendance", consistency:"strong"}); }
+function store(){ return getStore("ks-minkowice-attendance"); }
 function authPlayer(name,pin){ return cfg.pins[name] && cfg.pins[name] === String(pin||""); }
 function authAdmin(pin){ return String(pin||"") === String(cfg.adminPin); }
 function warsawDateParts(date=new Date()){
