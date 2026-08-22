@@ -66,6 +66,9 @@ function openApp(){
  $('coachTabBtn').classList.toggle('hidden',session.role!=='coach');
  $('welcome').textContent=session.role==='coach'?'Najbliższe treningi':'Cześć, '+session.player;
  renderTrainings();renderMatches();
+ if(session.role==='player'){
+  loadPlayerStatuses();
+}
 if(session.role==='coach'){
   const trainingOptions=data.trainings.map(t=>`<option value="${t.id}">🏃 ${t.label} ${fmt(t.date)} • ${t.time}</option>`);
   const matchOptions=data.matches.map(m=>`<option value="${m.id}">⚽ MECZ ${m.date} • ${m.home} - ${m.away}</option>`);
