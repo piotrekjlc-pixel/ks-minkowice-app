@@ -126,6 +126,42 @@ function renderMatches(){
       ` : ''}
     </div>
   `).join('');
+ async function loadPlayerStatuses(){
+  const events=[
+    ...data.trainings.map(t=>t.id),
+    ...data.matches.map(m=>m.id)
+  ];
+
+  for(const eventId of events){
+    try{
+      const j=await api(
+        '/.netlify/functions/attendance?eventId='+
+        encodeURIComponent(eventId)+
+        '&player='+
+        encodeURIComponent(session.player)+
+        '&pin='+
+        encodeURIComponent(session.pin)
+      );
+
+      const el=$('st-'+eventId);
+
+      if(el){
+        if(j.status==='yes'){
+          el.textContent='✓ Będę';
+          el.className='status yesText';
+        }else if(j.status==='no'){
+          el.textContent='✕ Nie będę';
+          el.className='status noText';
+        }else{
+          el.textContent='Nie zaznaczono';
+          el.className='status';
+        }
+      }
+    }catch(e){
+      console.log(e);
+    }
+  }
+}
 }async function loadCoach(){
  const id=$('coachEvent').value;if(!id)return;
  try{const j=await api('/.netlify/functions/attendance?adminPin='+encodeURIComponent(session.pin)+'&eventId='+encodeURIComponent(id));const y=j.rows.filter(x=>x.status==='yes').length,n=j.rows.filter(x=>x.status==='no').length,u=j.rows.filter(x=>x.status==='none').length;
