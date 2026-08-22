@@ -114,28 +114,6 @@ if (!valid) {
 
   return response({ rows });
 }
-    }
-
-    if (!eventId) {
-      return response({ error: "Brak eventId" }, 400);
-    }
-
-    const listed = await s.list({ prefix: `${eventId}/` });
-    const answers = {};
-
-    for (const item of listed.blobs) {
-      const data = await s.get(item.key, { type: "json" });
-      if (data?.player) answers[data.player] = data;
-    }
-
-    const rows = cfg.players.map((player) => ({
-      player,
-      status: answers[player]?.status || "none",
-      updatedAt: answers[player]?.updatedAt || null,
-    }));
-
-    return response({ eventId, rows });
-  }
-
+   
   return response({ error: "Method not allowed" }, 405);
 };
