@@ -71,6 +71,7 @@ if(session.role==='coach'){
   const matchOptions=data.matches.map(m=>`<option value="${m.id}">⚽ MECZ ${m.date} • ${m.home} - ${m.away}</option>`);
   $('coachEvent').innerHTML=[...trainingOptions,...matchOptions].join('');
 }
+ }
 function fmt(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`}
 function renderTrainings(){
  $('trainingList').innerHTML=data.trainings.slice(0,4).map((t,i)=>`<div class="event"><h3>${i===0?'Najbliższy trening: ':''}${t.label} • ${fmt(t.date)}</h3><div>${t.time} • ${t.place}</div>${session.role==='player'?`<div class="actions"><button class="btn btn-yes" onclick="answer('${t.id}','yes')">BĘDĘ</button><button class="btn btn-no" onclick="answer('${t.id}','no')">NIE BĘDĘ</button></div><div id="st-${t.id}" class="status noneText">Nie zaznaczono</div>`:''}</div>`).join('');
