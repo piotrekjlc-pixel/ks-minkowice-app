@@ -30,10 +30,22 @@ export default async (request) => {
       return response({ error: "Błędny status" }, 400);
     }
 
-    const valid = upcomingTrainings(8).some((t) => t.id === eventId);
-    if (!valid) {
-      return response({ error: "Nieprawidłowy lub nieaktualny trening" }, 400);
-    }
+    const trainings = upcomingTrainings(8);
+
+const matches = cfg.matches.map((match) => {
+  const [day, month, year] = match[0].split(".");
+  return {
+    id: `match-${year}-${month}-${day}`
+  };
+});
+
+const valid =
+  trainings.some((t) => t.id === eventId) ||
+  matches.some((m) => m.id === eventId);
+
+if (!valid) {
+  return response({ error: "Nieprawidłowe lub nieaktualne wydarzenie" }, 400);
+}
 
     const key = `${eventId}/${encodeURIComponent(player)}`;
     await s.setJSON(key, {
