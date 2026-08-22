@@ -77,7 +77,31 @@ function renderTrainings(){
  $('trainingList').innerHTML=data.trainings.slice(0,4).map((t,i)=>`<div class="event"><h3>${i===0?'Najbliższy trening: ':''}${t.label} • ${fmt(t.date)}</h3><div>${t.time} • ${t.place}</div>${session.role==='player'?`<div class="actions"><button class="btn btn-yes" onclick="answer('${t.id}','yes')">BĘDĘ</button><button class="btn btn-no" onclick="answer('${t.id}','no')">NIE BĘDĘ</button></div><div id="st-${t.id}" class="status noneText">Nie zaznaczono</div>`:''}</div>`).join('');
 }
 async function answer(eventId,status){
- try{await api('/.netlify/functions/attendance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({player:session.player,pin:session.pin,eventId,status})});const el=$('st-'+eventId);el.textContent=status==='yes'?'✓ Będę':'✕ Nie będę';el.className='status '+(status==='yes'?'yesText':'noText')}catch(e){alert(e.message);if(e.message.includes('PIN')) logout()}
+  try{
+    await api('/.netlify/functions/attendance',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        player:session.player,
+        pin:session.pin,
+        eventId,
+        status
+      })
+    });
+
+    const el=$('st-'+eventId);
+
+    if(el){
+      el.textContent=status==='yes'?'✓ Będę':'✕ Nie będę';
+      el.className='status '+(status==='yes'?'yesText':'noText');
+    }else{
+      alert(status==='yes'?'Zapisano: BĘDZIESZ na meczu ✅':'Zapisano: NIE BĘDZIESZ na meczu ❌');
+    }
+
+  }catch(e){
+    alert(e.message);
+    if(e.message.includes('PIN')) logout();
+  }
 }
 function renderMatches(){
   $('matches').innerHTML=data.matches.map(m=>`
