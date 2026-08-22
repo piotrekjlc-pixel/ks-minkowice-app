@@ -66,7 +66,10 @@ function openApp(){
  $('coachTabBtn').classList.toggle('hidden',session.role!=='coach');
  $('welcome').textContent=session.role==='coach'?'Najbliższe treningi':'Cześć, '+session.player;
  renderTrainings();renderMatches();
- if(session.role==='coach'){ $('coachEvent').innerHTML=data.trainings.map(t=>`<option value="${t.id}">${t.label} ${fmt(t.date)} • ${t.time}</option>`).join('');}
+if(session.role==='coach'){
+  const trainingOptions=data.trainings.map(t=>`<option value="${t.id}">🏃 ${t.label} ${fmt(t.date)} • ${t.time}</option>`);
+  const matchOptions=data.matches.map(m=>`<option value="${m.id}">⚽ MECZ ${m.date} • ${m.home} - ${m.away}</option>`);
+  $('coachEvent').innerHTML=[...trainingOptions,...matchOptions].join('');
 }
 function fmt(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`}
 function renderTrainings(){
@@ -75,8 +78,25 @@ function renderTrainings(){
 async function answer(eventId,status){
  try{await api('/.netlify/functions/attendance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({player:session.player,pin:session.pin,eventId,status})});const el=$('st-'+eventId);el.textContent=status==='yes'?'✓ Będę':'✕ Nie będę';el.className='status '+(status==='yes'?'yesText':'noText')}catch(e){alert(e.message);if(e.message.includes('PIN')) logout()}
 }
-function renderMatches(){$('matches').innerHTML=data.matches.map(m=>`<div class="match"><b>${m[0]} • ${m[1]}</b><div>${m[2]} — ${m[3]}</div><span class="small">${m[4]}</span></div>`).join('')}
-async function loadCoach(){
+function renderMatches(){
+  $('matches').innerHTML=data.matches.map(m=>`
+    <div class="match">
+      <b>⚽ ${m.date} • ${m.time}</b>
+      <div>${m.home} - ${m.away}</div>
+      <div><b>${m.type}</b></div>
+
+      ${session.role==='player' ? `
+        <div style="margin-top:12px">
+          <button class="btn" onclick="answer('${m.id}','yes')">✅ BĘDĘ</button>
+          <button class="btn btn-dark" onclick="answer('${m.id}','no')">❌ NIE BĘDĘ</button>
+        </div>
+        <div style="margin-top:8px;font-size:13px">
+          ⏰ Odpowiedz najpóźniej do piątku przed meczem
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}async function loadCoach(){
  const id=$('coachEvent').value;if(!id)return;
  try{const j=await api('/.netlify/functions/attendance?adminPin='+encodeURIComponent(session.pin)+'&eventId='+encodeURIComponent(id));const y=j.rows.filter(x=>x.status==='yes').length,n=j.rows.filter(x=>x.status==='no').length,u=j.rows.filter(x=>x.status==='none').length;
  $('coachStats').innerHTML=`<div class="statgrid"><div class="stat"><div class="num">${y}</div>Będzie</div><div class="stat"><div class="num">${n}</div>Nie będzie</div><div class="stat"><div class="num">${u}</div>Brak odp.</div></div>`;
