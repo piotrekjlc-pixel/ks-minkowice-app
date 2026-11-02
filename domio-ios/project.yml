@@ -1,0 +1,37 @@
+name: DomioNative
+options:
+  bundleIdPrefix: pl.domio
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+packages:
+  GoogleCast:
+    url: https://github.com/googlecast/google-cast-ios-sdk
+    from: 4.8.6
+targets:
+  DomioNative:
+    type: application
+    platform: iOS
+    sources:
+      - path: DomioNativeApp.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: pl.domio.smarthome
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: "Domio wykrywa Google Nest Mini i inne urządzenia Cast w domowej sieci Wi-Fi."
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: Domio
+        NSLocalNetworkUsageDescription: "Domio wykrywa Google Nest Mini w lokalnej sieci Wi-Fi."
+        NSBonjourServices:
+          - _googlecast._tcp
+          - _CC1AD845._googlecast._tcp
+    dependencies:
+      - package: GoogleCast
+        product: GoogleCastDynamic
