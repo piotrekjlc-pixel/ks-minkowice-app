@@ -88,6 +88,7 @@ http.createServer(async(req,res)=>{
  }
  if(req.method!=='GET')return json(res,405,{error:'Method not allowed'});
  if(p==='/app.js')return serve(res,'app.js','text/javascript; charset=utf-8');
+ if(p==='/manifest.webmanifest')return serve(res,'manifest.webmanifest','application/manifest+json; charset=utf-8');
  if(p==='/'||p==='/index.html')return serve(res,'index.html','text/html; charset=utf-8');
  return json(res,404,{error:'Not found'});
 }).listen(port,'0.0.0.0',async()=>{
