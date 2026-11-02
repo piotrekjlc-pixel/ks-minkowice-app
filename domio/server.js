@@ -69,6 +69,36 @@ http.createServer(async(req,res)=>{
     const id=new URL(req.url,'http://localhost').searchParams.get('id'),arr=await devices();if(!arr.some(d=>d.id===id))return json(res,404,{error:'Device not found'});
     const fn=await callApi('GET','/v1.0/iot-03/devices/'+encodeURIComponent(id)+'/functions','',await accessToken());return json(res,200,{functions:fn});
    }
+   if(p==='/api/light-control'&&req.method==='POST'){
+    if(!originOK(req))return json(res,403,{error:'Origin not allowed'});
+    const b=await bodyJSON(req),arr=await devices(),dev=arr.find(d=>d.id===b.id);
+    if(!dev)return json(res,404,{error:'Device not found'});
+    if(!dev.online)return json(res,409,{error:'Device offline'});
+    const allowed=new Set(['bright_value','bright_value_v2','temp_value','temp_value_v2','work_mode','colour_data','colour_data_v2']);
+    if(!allowed.has(b.code))return json(res,422,{error:'Unsupported control'});
+    const fn=await callApi('GET','/v1.0/iot-03/devices/'+encodeURIComponent(dev.id)+'/functions','',await accessToken());
+    const list=Array.isArray(fn)?fn:(fn?.functions||[]);
+    const spec=list.find(x=>x.code===b.code);
+    if(!spec)return json(res,422,{error:'Control unavailable on this device'});
+    let value=b.value;
+    let values={};try{values=typeof spec.values==='string'?JSON.parse(spec.values):spec.values||{}}catch{}
+    if(spec.type==='Integer'||spec.type==='Value'){
+      if(!Number.isInteger(value))return json(res,400,{error:'Integer value required'});
+      if(Number.isFinite(values.min)&&value<values.min||Number.isFinite(values.max)&&value>values.max)return json(res,400,{error:'Outside device range'});
+      if(Number.isFinite(values.step)&&values.step>0&&Number.isFinite(values.min)&&((value-values.min)%values.step!==0))return json(res,400,{error:'Invalid step'});
+    }else if(spec.type==='Enum'){
+      if(typeof value!=='string'||!Array.isArray(values.range)||!values.range.includes(value))return json(res,400,{error:'Invalid mode'});
+    }else if(spec.type==='String'){
+      if(typeof value!=='string'||value.length>512)return json(res,400,{error:'Invalid color payload'});
+      if(b.code.startsWith('colour_data')){
+        let c;try{c=JSON.parse(value)}catch{return json(res,400,{error:'Expected JSON color data'})}
+        if(!c||typeof c!=='object'||!['h','s','v'].every(k=>Number.isInteger(c[k]))||c.h<0||c.h>360||c.s<0||c.s>1000||c.v<0||c.v>1000)return json(res,400,{error:'Invalid HSV color'});
+      }
+    }else return json(res,422,{error:'Unsupported control type'});
+    const payload=JSON.stringify({commands:[{code:b.code,value}]});
+    await callApi('POST','/v1.0/iot-03/devices/'+encodeURIComponent(dev.id)+'/commands',payload,await accessToken());
+    deviceCache.expires=0;return json(res,200,{ok:true});
+   }
    if(p==='/api/toggle'&&req.method==='POST'){
     if(!originOK(req))return json(res,403,{error:'Origin not allowed'});
     const b=await bodyJSON(req),arr=await devices(),dev=arr.find(d=>d.id===b.id);
