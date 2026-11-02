@@ -1,0 +1,11 @@
+{
+  "name": "Domio Smart Home",
+  "short_name": "Domio",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a1020",
+  "theme_color": "#0a1020",
+  "lang": "pl",
+  "description": "Polski panel sterowania urządzeniami Smart Life"
+}
