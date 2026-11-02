@@ -13,10 +13,36 @@ function showLoggedIn(){isAuthenticated=true;e('connectPanel').classList.add('hi
 function showLoggedOut(){isAuthenticated=false;realDevices=[];e('connectPanel').classList.remove('hidden');e('realPanel').classList.add('hidden');e('demoBanner').classList.remove('hidden');e('linkState').textContent='wymaga zalogowania'}
 e('login').onclick=async()=>{const pin=e('secret').value.trim();if(!/^[0-9]{8}$/.test(pin)){e('loginMsg').textContent='Wpisz 8 cyfr PIN-u Domio';return}e('login').disabled=true;try{await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});e('secret').value='';showLoggedIn()}catch(err){e('loginMsg').textContent=err.message}finally{e('login').disabled=false}};
 e('logout').onclick=async()=>{try{await api('/api/logout',{method:'POST'})}catch{}showLoggedOut()};
-async function command(t){t=t.trim().toLocaleLowerCase('pl-PL');if(/nest|spotify|muzyk/.test(t))return say('Muzyka: integracja w przygotowaniu');let on=/włącz|zapal/.test(t),off=/wyłącz|zgaś/.test(t);if(isAuthenticated){if(!on&&!off)return say('Podaj nazwę urządzenia oraz „włącz” lub „wyłącz”.');let matches=realDevices.filter(d=>t.includes(d.name.toLocaleLowerCase('pl-PL'))&&supportedSwitch(d));if(matches.length!==1)return say('Wymień dokładną nazwę jednego urządzenia Smart Life. Znaleziono: '+matches.length);const d=matches[0],sw=supportedSwitch(d);if(!d.online)return say('Urządzenie jest offline');return toggleDevice(d.id,sw.code,on,{disabled:false})}
-if(/dobranoc/.test(t))return scene('night');if(!on&&!off)return say('Nie rozpoznano polecenia testowego');let found=a.filter(x=>!rooms.slice(1).some(r=>t.includes(r.toLocaleLowerCase('pl').slice(0,4)))||t.includes(x.room.toLocaleLowerCase('pl').slice(0,4)));if(/świat|lamp/.test(t))found=found.filter(x=>x.kind==='light');if(/gniazd/.test(t))found=found.filter(x=>x.kind==='plug');found.forEach(x=>x.on=on);renderDemo();say('Zmieniono '+found.length+' przykładowych urządzeń')}
+function normalizeName(v){return String(v||'').toLocaleLowerCase('pl-PL').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()}
+function aliases(d){const raw=normalizeName(d.name),set=new Set([raw]);if(raw.endsWith(' lights'))set.add(raw.replace(/ lights$/,' swiatla'));if(raw.includes('swiatelka'))set.add(raw.replace('swiatelka','lampki'));if(raw.includes('wall lights')){set.add('swiatla scienne');set.add('lampy scienne')}return [...set].filter(x=>x.length>2)}
+function resolveTargets(t){const c=normalizeName(t),available=realDevices.filter(d=>d.online&&supportedSwitch(d));const byName=available.filter(d=>aliases(d).some(name=>c.includes(name)));if(byName.length===1)return byName;if(byName.length>1)return [];return []}
+let pendingVoice=null;
+function speakFeedback(t){say(t);try{if(window.speechSynthesis&&window.SpeechSynthesisUtterance){const utterance=new SpeechSynthesisUtterance(t);utterance.lang='pl-PL';utterance.rate=1.04;window.speechSynthesis.cancel();window.speechSynthesis.speak(utterance)}}catch{}}
+async function command(input){
+ const raw=String(input||'').trim(),t=normalizeName(raw);
+ if(!t)return say('Wpisz lub wypowiedz polecenie.');
+ if(!isAuthenticated)return say('Najpierw zaloguj się do Domio.');
+ if(/spotify|nest mini|muzyk/.test(t))return say('Sterowanie muzyką na Nest Mini nie jest jeszcze dostępne.');
+ if(pendingVoice){
+   const pending=pendingVoice;pendingVoice=null;
+   if(/^(tak|potwierdzam|wykonaj)$/.test(t)){say('Wykonuję '+pending.items.length+' poleceń…');let ok=0;for(const d of pending.items){try{const sw=supportedSwitch(d);if(sw){await api('/api/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:d.id,code:sw.code,value:pending.value})});ok++}}catch{}}await syncDevices();return speakFeedback('Wykonano '+ok+' z '+pending.items.length+' poleceń.')}
+   if(/^(nie|anuluj|stop)$/.test(t))return speakFeedback('Anulowano.');
+ }
+ const off=/\\b(wylacz|zgas|zgasnij|zgasic|wylaczcie)\\b/.test(t),on=/\\b(wlacz|zapal|zaswiec|zaswiecic)\\b/.test(t);
+ if(on===off)return say('Powiedz na przykład: Włącz Wall lights.');
+ const matching=resolveTargets(raw);
+ if(matching.length===1){const d=matching[0],sw=supportedSwitch(d);if(sw.value===on)return speakFeedback(d.name+' już jest '+(on?'włączone.':'wyłączone.'));try{await api('/api/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:d.id,code:sw.code,value:on})});await syncDevices();return speakFeedback(on?'Włączono '+d.name+'.':'Wyłączono '+d.name+'.')}catch{return say('Nie udało się sterować: '+d.name)}}
+ if(/\\b(wszystkie|wszystko|cale|caly)\\b/.test(t)&&/swiatl|lamp/.test(t)){
+   const targets=realDevices.filter(d=>d.online&&supportedSwitch(d)&&(/swiat|light|lamp|led|bulb|gwiazd|stars|choink|tree/.test(normalizeName(d.name))||/dj|dd|light/.test(d.category||'')));
+   if(!targets.length)return say('Nie znalazłem kompatybilnych świateł online.');
+   pendingVoice={items:targets,value:on};
+   return speakFeedback('Znaleziono '+targets.length+' świateł. Powiedz „potwierdzam”, aby '+(on?'włączyć':'wyłączyć')+' wszystkie, lub „anuluj”.');
+ }
+ return say('Nie rozpoznałem jednoznacznie urządzenia. Wypowiedz dokładną nazwę z listy, np. „Włącz Wall lights”.');
+}
+
 document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>scene(b.dataset.scene));
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));['home','music','settings'].forEach(v=>e(v).classList.toggle('hidden',v!==b.dataset.view))});
 e('send').onclick=()=>{command(e('input').value);e('input').value=''};e('input').addEventListener('keydown',ev=>{if(ev.key==='Enter')e('send').click()});
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(SR){const sr=new SR();sr.lang='pl-PL';sr.onresult=ev=>command(ev.results[0][0].transcript);sr.onerror=()=>say('Nie udało się użyć mikrofonu');e('mic').onclick=()=>{sr.start();say('Słucham…')}}else e('mic').onclick=()=>say('Rozpoznawanie głosu niedostępne w tej przeglądarce');
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(SR){const sr=new SR();sr.lang='pl-PL';sr.onresult=ev=>{const t=ev.results[0][0].transcript;e('input').value=t;command(t)};sr.onerror=ev=>say('Mikrofon: '+ev.error+'. Możesz wpisać polecenie poniżej.');e('mic').onclick=()=>{try{sr.start();say('Słucham po polsku…')}catch{say('Mikrofon jest już aktywny')}}}else e('mic').onclick=()=>say('Rozpoznawanie głosu niedostępne w tej przeglądarce');
 renderDemo();api('/api/status').then(x=>{e('health').textContent='działa';if(x.connected)showLoggedIn();else showLoggedOut()}).catch(()=>{e('health').textContent='niedostępny';showLoggedOut()});
