@@ -1,5 +1,5 @@
 import http from 'node:http';
-import {createHmac,createHash,randomBytes,timingSafeEqual} from 'node:crypto';
+import {createHmac,createHash,randomBytes,timingSafeEqual,scryptSync} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
@@ -52,7 +52,7 @@ http.createServer(async(req,res)=>{
  if(p==='/api/login'&&req.method==='POST'){
   if(!originOK(req))return json(res,403,{error:'Origin not allowed'});
   if(!canAttempt(req))return json(res,429,{error:'Too many attempts. Try later.'});
-  try{const b=await bodyJSON(req);if(!process.env.TUYA_CLIENT_SECRET||!safeEqual(b.secret,process.env.TUYA_CLIENT_SECRET))return json(res,401,{error:'Incorrect Tuya Access Secret'});
+  try{const b=await bodyJSON(req);if(!process.env.DOMIO_PIN_SALT||!process.env.DOMIO_PIN_HASH||!/^[0-9]{8}$/.test(String(b.pin||''))||!safeEqual(scryptSync(String(b.pin),Buffer.from(process.env.DOMIO_PIN_SALT,'hex'),64).toString('hex'),process.env.DOMIO_PIN_HASH))return json(res,401,{error:'Nieprawidłowy PIN'});
    const expires=Date.now()+maxAge*1000,nonce=randomBytes(16).toString('hex'),mac=sig(expires+'.'+nonce);
    res.setHeader('Set-Cookie',cookieName+'='+encodeURIComponent(expires+'.'+nonce+'.'+mac)+'; Max-Age='+maxAge+'; Path=/; HttpOnly; Secure; SameSite=Strict');
    return json(res,200,{ok:true})
